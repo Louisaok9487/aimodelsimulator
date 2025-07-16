@@ -11,8 +11,8 @@
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <!-- Babel for JSX transformation in the browser (for development/single file) -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <!-- React Markdown CDN -->
-    <script src="https://unpkg.com/react-markdown/react-markdown.min.js"></script>
+    <!-- NEW React Markdown CDN - using a more direct link -->
+    <script src="https://cdn.jsdelivr.net/npm/react-markdown@8.0.0/react-markdown.min.js"></script>
 
     <style>
         /* Custom scrollbar style */
@@ -91,8 +91,10 @@
     <script type="text/babel">
         // React components and logic go here
         const { useState, useEffect, useRef } = React;
-        // REVERTED FIX: Access ReactMarkdown directly from window
-        const ReactMarkdownComponent = window.ReactMarkdown; 
+        // Access ReactMarkdown from window.ReactMarkdown or window['react-markdown']
+        // We'll try window.ReactMarkdown.default first, as it's common for UMD builds
+        // If that fails, window.ReactMarkdown might work, or window['react-markdown']
+        const ReactMarkdownComponent = window.ReactMarkdown ? window.ReactMarkdown.default || window.ReactMarkdown : null;
 
         // Main App component
         const App = () => {
@@ -104,9 +106,14 @@
 
             // Initial welcome messages on component mount
             useEffect(() => {
-                addLineToTerminal(`Hello! I'm your AI assistant.`, 'system');
-                addLineToTerminal('Type your question below and press Enter to chat with me.', 'system');
-                addLineToTerminal('You can also type \'clear\' to clear our conversation history.', 'system');
+                // Check if ReactMarkdownComponent loaded successfully
+                if (!ReactMarkdownComponent) {
+                    addLineToTerminal(`Error: Markdown rendering library not loaded. Please check CDN link.`, 'error');
+                } else {
+                    addLineToTerminal(`Hello! I'm your AI assistant.`, 'system');
+                    addLineToTerminal('Type your question below and press Enter to chat with me.', 'system');
+                    addLineToTerminal('You can also type \'clear\' to clear our conversation history.', 'system');
+                }
             }, []); // Empty dependency array means this runs once on mount
 
             // Effect to scroll to the bottom of the chat output
@@ -238,7 +245,12 @@
                                 }`}>
                                     {line.type === 'ai' ? (
                                         // Render AI responses with Markdown
-                                        <ReactMarkdownComponent children={line.text} className="prose prose-invert max-w-none" />
+                                        // Ensure ReactMarkdownComponent is not null before rendering
+                                        ReactMarkdownComponent ? (
+                                            <ReactMarkdownComponent children={line.text} className="prose prose-invert max-w-none" />
+                                        ) : (
+                                            <pre>{line.text}</pre> // Fallback to pre-formatted text
+                                        )
                                     ) : (
                                         // Render other messages as plain text
                                         line.text
