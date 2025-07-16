@@ -91,7 +91,8 @@
     <script type="text/babel">
         // React components and logic go here
         const { useState, useEffect, useRef } = React;
-        const ReactMarkdown = window.ReactMarkdown; // Access ReactMarkdown from global scope
+        // FIX: Access ReactMarkdown.default as the component from the CDN
+        const ReactMarkdownComponent = window.ReactMarkdown.default; 
 
         // Main App component
         const App = () => {
@@ -237,7 +238,7 @@
                                 }`}>
                                     {line.type === 'ai' ? (
                                         // Render AI responses with Markdown
-                                        <ReactMarkdown children={line.text} className="prose prose-invert max-w-none" />
+                                        <ReactMarkdownComponent children={line.text} className="prose prose-invert max-w-none" />
                                     ) : (
                                         // Render other messages as plain text
                                         line.text
