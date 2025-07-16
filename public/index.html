@@ -154,13 +154,35 @@
                     const apiUrl = "/.netlify/functions/ask-gemini"; // Path to your Netlify Function
                     const payload = { query: aiQuery }; // Send the query to your function
 
+                    console.log("Frontend: Sending request to Netlify Function:", apiUrl);
+                    console.log("Frontend: Payload being sent:", payload);
+
                     const response = await fetch(apiUrl, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(payload)
                     });
 
-                    const result = await response.json();
+                    console.log("Frontend: Received response object:", response);
+                    console.log("Frontend: Response status:", response.status);
+                    console.log("Frontend: Response OK status:", response.ok);
+
+                    // Attempt to parse JSON even if response.ok is false, to get error details
+                    let result;
+                    try {
+                        result = await response.json();
+                        console.log("Frontend: Parsed JSON result:", result);
+                    } catch (jsonError) {
+                        console.error("Frontend: Error parsing JSON response:", jsonError);
+                        // If JSON parsing fails, try to get raw text for debugging
+                        const rawText = await response.text();
+                        console.error("Frontend: Raw response text (if JSON parsing failed):", rawText);
+                        setTerminalOutput(prev => prev.filter(line => line.type !== 'thinking'));
+                        addLineToTerminal(`Error: Received non-JSON response from server. Check server logs.`, 'error');
+                        setIsAskingAI(false);
+                        return; // Stop execution here if JSON parsing fails
+                    }
+
 
                     // Remove the "Thinking..." message before adding the actual AI response
                     setTerminalOutput(prev => prev.filter(line => line.type !== 'thinking'));
@@ -169,18 +191,22 @@
                     if (response.ok && result.response) {
                         const aiResponse = result.response;
                         addLineToTerminal(aiResponse, 'ai'); // Store raw Markdown for AI response
+                        console.log("Frontend: AI response successfully displayed.");
                     } else {
                         // Handle errors from your Netlify Function or unexpected structure
-                        addLineToTerminal(`Error: ${result.error || 'Unknown error from server.'}`, 'error');
-                        console.error('Function response error:', result);
+                        const errorMessage = result.error || 'Unknown error from server.';
+                        addLineToTerminal(`Error: ${errorMessage}`, 'error');
+                        console.error('Frontend: Function response error details:', result);
                     }
                 } catch (error) {
+                    // This catch block handles network errors (e.g., function not found, CORS)
+                    console.error("Frontend: Network or unhandled error during fetch:", error);
                     // Remove the "Thinking..." message on error
                     setTerminalOutput(prev => prev.filter(line => line.type !== 'thinking'));
-                    addLineToTerminal(`Error interacting with AI: ${error.message}`, 'error');
-                    console.error('AI API call failed:', error);
+                    addLineToTerminal(`Error interacting with AI: ${error.message}. Check browser console for details.`, 'error');
                 } finally {
                     setIsAskingAI(false); // Reset loading flag
+                    console.log("Frontend: isAskingAI reset to false.");
                 }
             };
 
