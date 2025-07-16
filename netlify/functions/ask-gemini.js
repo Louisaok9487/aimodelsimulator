@@ -1,18 +1,18 @@
 // netlify/functions/ask-gemini.js
-const fetch = require('node-fetch'); // Node.js built-in fetch or npm install node-fetch if older Node.js
+const fetch = require('node-fetch');
 
 exports.handler = async function(event, context) {
-    // Ensure this function only responds to POST requests
+    console.log("Function invoked!"); // Log start of function
     if (event.httpMethod !== "POST") {
+        console.log("Method not POST:", event.httpMethod);
         return {
             statusCode: 405,
             body: "Method Not Allowed",
         };
     }
 
-    // Get the API key from Netlify Environment Variables
-    // This variable must be set in your Netlify site settings (see Step 5)
     const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+    console.log("API Key present:", !!GEMINI_API_KEY); // Check if key is defined
 
     if (!GEMINI_API_KEY) {
         return {
@@ -22,9 +22,12 @@ exports.handler = async function(event, context) {
     }
 
     try {
-        const { query } = JSON.parse(event.body); // Parse the query sent from your frontend
+        const parsedBody = JSON.parse(event.body);
+        const { query } = parsedBody;
+        console.log("Received query:", query); // Log the received query
 
         if (!query) {
+            console.log("Query is missing.");
             return {
                 statusCode: 400,
                 body: JSON.stringify({ error: "Query parameter is missing." }),
@@ -34,6 +37,7 @@ exports.handler = async function(event, context) {
         const chatHistory = [{ role: "user", parts: [{ text: query }] }];
         const payload = { contents: chatHistory };
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
+        console.log("Making fetch request to Gemini API..."); // Log before fetch
 
         const response = await fetch(apiUrl, {
             method: 'POST',
@@ -41,12 +45,16 @@ exports.handler = async function(event, context) {
             body: JSON.stringify(payload)
         });
 
+        console.log("Gemini API response status:", response.status); // Log response status
+
         const result = await response.json();
+        console.log("Gemini API raw result:", JSON.stringify(result, null, 2)); // Log full raw result
 
         if (result.candidates && result.candidates.length > 0 &&
             result.candidates[0].content && result.candidates[0].content.parts &&
             result.candidates[0].content.parts.length > 0) {
             const aiResponse = result.candidates[0].content.parts[0].text;
+            console.log("AI Response extracted successfully.");
             return {
                 statusCode: 200,
                 headers: { "Content-Type": "application/json" },
@@ -61,7 +69,7 @@ exports.handler = async function(event, context) {
         }
 
     } catch (error) {
-        console.error("Function error:", error);
+        console.error("Function error caught:", error); // Log any caught errors
         return {
             statusCode: 500,
             body: JSON.stringify({ error: `Server error: ${error.message}` }),
