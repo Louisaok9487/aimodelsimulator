@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -150,14 +149,10 @@
                 setIsAskingAI(true); // Set flag to show loading
 
                 try {
-                    // Gemini API call
-                    let chatHistory = [];
-                    chatHistory.push({ role: "user", parts: [{ text: aiQuery }] });
-
-                    const payload = { contents: chatHistory };
-                    // IMPORTANT: Replace "YOUR_GEMINI_API_KEY_HERE" with your actual API key
-                    const apiKey = "AIzaSyDiVKPShRyg9Llydvi7q-LZTb3q_gXx78k"; 
-                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+                    // Gemini API call now routed through Netlify Function
+                    // The API key is securely stored in Netlify's environment variables.
+                    const apiUrl = "/.netlify/functions/ask-gemini"; // Path to your Netlify Function
+                    const payload = { query: aiQuery }; // Send the query to your function
 
                     const response = await fetch(apiUrl, {
                         method: 'POST',
@@ -170,14 +165,14 @@
                     // Remove the "Thinking..." message before adding the actual AI response
                     setTerminalOutput(prev => prev.filter(line => line.type !== 'thinking'));
 
-                    if (result.candidates && result.candidates.length > 0 &&
-                        result.candidates[0].content && result.candidates[0].content.parts &&
-                        result.candidates[0].content.parts.length > 0) {
-                        const aiResponse = result.candidates[0].content.parts[0].text;
+                    // Check for the 'response' property from your Netlify Function's return
+                    if (response.ok && result.response) {
+                        const aiResponse = result.response;
                         addLineToTerminal(aiResponse, 'ai'); // Store raw Markdown for AI response
                     } else {
-                        addLineToTerminal('Error: Could not get a valid response from the AI model.', 'error');
-                        console.error('AI API response structure unexpected:', result);
+                        // Handle errors from your Netlify Function or unexpected structure
+                        addLineToTerminal(`Error: ${result.error || 'Unknown error from server.'}`, 'error');
+                        console.error('Function response error:', result);
                     }
                 } catch (error) {
                     // Remove the "Thinking..." message on error
