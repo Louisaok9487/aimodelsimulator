@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Chat Assistant</title>
+    <title>Hato Hone St John AI Chat Assistant Simulator</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- React and ReactDOM CDNs -->
@@ -11,7 +11,7 @@
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <!-- Babel for JSX transformation in the browser (for development/single file) -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <!-- NEW React Markdown CDN - using a more direct link -->
+    <!-- React Markdown CDN -->
     <script src="https://cdn.jsdelivr.net/npm/react-markdown@8.0.0/react-markdown.min.js"></script>
 
     <style>
@@ -91,9 +91,6 @@
     <script type="text/babel">
         // React components and logic go here
         const { useState, useEffect, useRef } = React;
-        // Access ReactMarkdown from window.ReactMarkdown or window['react-markdown']
-        // We'll try window.ReactMarkdown.default first, as it's common for UMD builds
-        // If that fails, window.ReactMarkdown might work, or window['react-markdown']
         const ReactMarkdownComponent = window.ReactMarkdown ? window.ReactMarkdown.default || window.ReactMarkdown : null;
 
         // Main App component
@@ -229,8 +226,14 @@
                 <div className="min-h-screen bg-gray-900 text-gray-100 font-mono flex items-center justify-center p-4">
                     <div className="bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-4xl h-[80vh] flex flex-col border border-gray-700">
                         {/* Chat Header */}
-                        <div className="flex-none text-lg font-bold text-gray-300 mb-4 border-b border-gray-700 pb-3">
-                            AI Chat Assistant
+                        <div className="flex-none text-lg font-bold text-gray-300 mb-4 border-b border-gray-700 pb-3 flex items-center justify-between">
+                            <img
+                                src="./images/st-john-logo.png"  <!-- UPDATED PATH HERE -->
+                                alt="Hato Hone St John Logo"
+                                className="h-10 w-10 mr-3 rounded-full"
+                                onError={(e) => { e.target.onerror = null; e.target.src="https://placehold.co/80x80/6B7280/FFFFFF?text=Logo" }}
+                            />
+                            Hato Hone St John AI Chat Assistant
                         </div>
 
                         {/* Chat Output Area */}
